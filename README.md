@@ -56,7 +56,7 @@ In the queries for ACT and ANT, I join financial account to financial type on th
 
 For the generation of the ACT and ANT files, we depend on custom fields (more than we should...), so you will have to change this.
 
-`prepareWinbooksExport($batchId)` is a hack that generate invoice ID's, and stores those in the trxn_id-field of the contributions. It updates the values of `chirocontribution_max_cursusfactuur_nr` and `chirocontribution_max_aansluitingsfactuur_nr`. This is rather error prone.
+`prepareWinbooksExport($batchId)` is a hack that generate invoice ID's, and stores those in the trxn_id-field of the contributions. (I have no idea why not in invoice_id.) It updates the values of `chirocontribution_max_cursusfactuur_nr` and `chirocontribution_max_aansluitingsfactuur_nr`. This is rather error prone.
 
 `putFile($exports)` normally creates a file, writes the string `$exports` to it, and returns the file name. We changed the functionality: it now expects an array of 3 strings, containing the contents for `act.txt`, `ant.txt` and `csf.txt`.
 
