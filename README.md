@@ -5,7 +5,7 @@ that can be imported into [Winbooks](https://www.winbooks.be) using the
 crappy [WbLink](http://www.igsoft.eu/WikiFrWinBooks/index.php) tool.
 
 We use it with CiviCRM 4.7. It probably works with 4.6.x, but you will have
-to to try (and change the CiviCRM version number in [info.xml](info.xml)).
+to try (and change the CiviCRM version number in [info.xml](info.xml)).
 
 **Disclaimer:** This extension is crappy as well. :-) It is not production ready. It is probably broken, but it works for us at the moment. More or less. ;-)
 You'll probably have to adapt it for your own organisation, or even better:
