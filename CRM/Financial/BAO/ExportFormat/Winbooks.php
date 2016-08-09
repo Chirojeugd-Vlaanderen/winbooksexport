@@ -188,8 +188,9 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
       LEFT JOIN civicrm_contribution cont ON cont.id = eft.entity_id
       LEFT JOIN civicrm_contact contact_from ON contact_from.id = cont.contact_id
       # Zoektocht naar financieel verantwoordelijk
-      LEFT JOIN civicrm_relationship contact_relation ON contact_from.id = contact_relation.contact_id_b and contact_relation.start_date <= NOW()  and contact_relation.end_date >= NOW()
-      LEFT JOIN civicrm_relationship_type contact_relation_type ON contact_relation.relationship_type_id = contact_relation_type.id and contact_relation_type.name_b_a = 'ploeg_van'
+      LEFT JOIN civicrm_relationship contact_relation 
+        ON contact_from.id = contact_relation.contact_id_b AND contact_relation.is_active = 1
+        AND contact_relation.relationship_type_id = " . CHIRO_RELATIONSHIP_LID_VAN . " 
       LEFT JOIN $relationship_lid_van_customfields_tabel extra_lid_informatie ON contact_relation.id = extra_lid_informatie.entity_id
       LEFT JOIN civicrm_contact contact_fin_verantw ON contact_fin_verantw.id = contact_relation.contact_id_a and extra_lid_informatie.$relationship_lid_van_customfields_functie_kolom like '%FI%'
       LEFT JOIN civicrm_address cba ON cba.contact_id = contact_from.id and cba.is_billing = 1
