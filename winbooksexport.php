@@ -166,6 +166,18 @@ function winbooksexport_civicrm_buildForm($formName, &$form) {
 }
 
 /**
+ * Implements hook_civicrm_alterAPIPermissions.
+ *
+ * @param string $entity
+ * @param string $action
+ * @param array $params
+ * @param array $permissions
+ */
+function winbooksexport_civicrm_alterAPIPermissions($entity, $action, &$params, &$permissions) {
+  $permissions['batched_contribution']['get'] = array(
+    'access CiviCRM',
+    'access CiviContribute');
+/**
  * Implements hook_civicrm_navigationMenu().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
