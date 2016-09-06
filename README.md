@@ -4,19 +4,18 @@ With this extension you can export financial batches to CSV-documents,
 that can be imported into [Winbooks](https://www.winbooks.be) using the
 crappy [WbLink](http://www.igsoft.eu/WikiFrWinBooks/index.php) tool.
 
-We use it with a patched CiviCRM 4.7. It probably works with 4.6.x, but you will have
-to try (and change the CiviCRM version number in [info.xml](info.xml)).
+This extension works for CiviCRM 4.7.9 or later. If you want to use it with
+earlier versions of CiviCRM, you need to apply
+[a patch](https://issues.civicrm.org/jira/browse/CRM-18697) to fix
+[CRM-18697](https://issues.civicrm.org/jira/browse/CRM-18697).
+
+be.chiro.civi.winbooksexport depends on
+[be.chiro.civi.queryapitools](https://github.com/Chirojeugd-Vlaanderen/queryapitools),
+so you need to install that one as well.
 
 **Disclaimer:** This extension is crappy as well. :-) It is not production ready. It is probably broken, but it works for us at the moment. More or less. ;-)
 You'll probably have to adapt it for your own organisation, or even better:
 make it configurable. (I will happily accept pull requests.)
-
-## You have to patch CiviCRM
-
-You need to apply a [patch](https://github.com/civicrm/civicrm-core/pull/8471.diff)
-to your CiviCRM installation, to fix issue
-[CRM-18697](https://issues.civicrm.org/jira/browse/CRM-18697). See
-[pull request #8471 on on civicrm-core](https://github.com/civicrm/civicrm-core/pull/8471).
 
 ## Configuration
 

@@ -22,6 +22,10 @@
  | GNU Affero General Public License or the licensing of CiviCRM,     |
  | see the CiviCRM license FAQ at http://civicrm.org/licensing        |
  +--------------------------------------------------------------------+
+
+ The only significant change compared to the original
+ civicrm/templates/CRM/Financial/Form/Search.tpl, is that we added
+ an option 'Winbooks' to the available export formats.
 *}
 
 {* Financial search component. *}
