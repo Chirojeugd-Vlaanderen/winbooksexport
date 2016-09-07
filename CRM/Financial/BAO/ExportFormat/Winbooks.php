@@ -102,11 +102,11 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
    * @return array
    */
   function generateExportQuery($batchId) {
-    $this->prepareWinbooksExport($batchId);
+    self::prepareWinbooksExport($batchId);
     $result = array();
-    $result['csf'] = $this->generateCSFQuery($batchId);
-    $result['act'] = $this->generateACTQuery($batchId);
-    $result['ant'] = $this->generateANTQuery($batchId);
+    $result['csf'] = self::generateCSFQuery($batchId);
+    $result['act'] = self::generateACTQuery($batchId);
+    $result['ant'] = self::generateANTQuery($batchId);
     return $result;
   }
 
@@ -115,7 +115,7 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
    *
    * @return CRM_Core_DAO
    */
-  function generateCSFQuery($batchId) {
+  static function generateCSFQuery($batchId) {
 
     // Query voor CSF bestand
     // Deel 1 voor groepsfacturen
@@ -210,7 +210,7 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
    *
    * @return Object
    */
-  function generateACTQuery($batchId) {
+  static function generateACTQuery($batchId) {
 
     // Query voor ACT bestand
 
@@ -261,7 +261,7 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
    *
    * @return Object
    */
-  function generateANTQuery($batchId) {
+  static function generateANTQuery($batchId) {
 
     // Query voor ANT bestand
 
@@ -322,6 +322,9 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
    *        die DAO de velden oplevert die hieronder gebruikt worden.
    */
   function makeExport($export) {
+    $csf = array();
+    $act = array();
+    $ant = array();
     foreach ($export as $batchId => $dao_array) {
       // Execute winbooks querys, and fetch and format values, to assign to tpl
       $dao_csf = $dao_array['csf'];
@@ -528,84 +531,104 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
          $factuurnummerdeel2 . $controlegetal . '+++';
   }
 
+  /**
+   * Test whether the batch with given ID contains invoices with a trxn_id.
+   *
+   * @param int $batchId
+   * @return boolean
+   */
+  private static function testExistingTransactionIds($batchId) {
+    is_numeric($batchId) or die('BatchID should be numeric.');
+    $result = civicrm_api3('BatchedContribution', 'get', array(
+      'batch_id' => $batchId,
+      'trxn_id' => array('>' => ''),
+      'options' => array('limit' => 1)
+    ));
+    return ($result['count'] > 0);
+  }
+
+  /**
+   * Test existence of a contribution with the predecessor of the given trxn_id.
+   * @param int $trxnId
+   */
+  private static function testPreviousTrxnId($trxnId) {
+    is_numeric($trxnId) or die('trxnId should be numeric.');
+    $result = civicrm_api3('Contribution', 'get', array('trxn_id' => $trxnId - 1));
+    if ($result['count'] != 1) {
+      CRM_Core_Session::setStatus(ts('Transaction ID discontinuity detected. Transaction %1 not found.', array(1 => $trxnId - 1)));
+    }
+  }
+
+  /**
+   * Store invoice number in trxn_id and OGM in custom field.
+   *
+   * Eigenlijk is het niet helemaal juist wat we hier doen. We
+   * gebruiken de functionaliteit om transacties te exporteren, om
+   * contributies te exporteren. In ons geval wordt er bij iedere
+   * contributie automatisch een transactie aangemaakt, dat is waarschijnlijk
+   * ons geluk.
+   *
+   * @param int $batchId
+   */
   public function prepareWinbooksExport($batchId) {
-    $max_aansluitingsfactuur_nr = CRM_Core_BAO_Setting::getItem('chirocontribution', 'chirocontribution_max_aansluitingsfactuur_nr');
-    $max_cursusfactuur_nr = CRM_Core_BAO_Setting::getItem('chirocontribution', 'chirocontribution_max_cursusfactuur_nr');
+    $aansluitingsfactuur_nr = CRM_Core_BAO_Setting::getItem('chirocontribution', 'chirocontribution_max_aansluitingsfactuur_nr');
+    $cursusfactuur_nr = CRM_Core_BAO_Setting::getItem('chirocontribution', 'chirocontribution_max_cursusfactuur_nr');
+    self::testPreviousTrxnId($aansluitingsfactuur_nr);
+    self::testPreviousTrxnId($cursusfactuur_nr);
 
-    // Factuurnummer en OGM aanpassen van contribution. We proberen
-    // eerst de contributies te vinden.
-    // Pas ook receive_date aan (#4479)
-
-    // Eigenlijk is het niet helemaal juist wat we hier doen. We
-    // gebruiken de functionaliteit om transacties te exporteren, om
-    // contributies te exporteren. In ons geval wordt er bij iedere
-    // contributie automatisch een transactie aangemaakt, dat is ons
-    // geluk.
-
-    $sql = "SELECT cont.id, cont.financial_type_id
-      FROM civicrm_entity_batch eb
-      LEFT JOIN civicrm_financial_trxn ft ON (eb.entity_id = ft.id AND eb.entity_table = 'civicrm_financial_trxn')
-      LEFT JOIN civicrm_entity_financial_trxn eft ON (eft.financial_trxn_id = ft.id AND eft.entity_table = 'civicrm_contribution')
-      LEFT JOIN civicrm_contribution cont ON cont.id = eft.entity_id
-      WHERE eb.batch_id = ( %1 ) AND cont.total_amount > 0
-      ORDER BY cont.id";
-    // Voor de zekerheid sorteren we hierboven ook op contributie-ID.
-    // Op die manier probeer ik de aansluitingscontributies, die
-    // gemaakt zijn op volgorde van stamnummer, op dezelfde manier
-    // doorgeboekt te krijgen naar Winbooks. (#4407)
-
-    // We geven enkel contributies met een total_amount > 0 een
-    // factuurnummer. In Winbooks.php worden alleen contributies met
-    // factuurnummer geëxporteerd. Op die manier vermijden we een
-    // export van nulfacturen (#4464)
-
-    $params = array(1 => array($batchId, 'String'));
-    $dao = CRM_Core_DAO::executeQuery($sql, $params);
-    $contribution_types = array();
-
-    // Hacky.
-    while ($dao->fetch()) {
-      $contribution_types[$dao->id] = $dao->financial_type_id;
+    if (self::testExistingTransactionIds($batchId)) {
+      CRM_Core_Session::setStatus(ts('Existing transaction IDs were not replaced.'));
     }
 
-    //Update facturen met factuurnr en ogm
-    foreach ($contribution_types as $contribution_id => $financial_type_id) {
-      if ($financial_type_id == CHIRO_FINANCIAL_TYPE_KOSTEN_EVENT ||
+    $result = civicrm_api3('BatchedContribution', 'get', array(
+      'batch_id' => $batchId,
+      // FIXME: we should have something like 'IS NULL OR EMPTY'.
+      'trxn_id' => array('IS_NULL' => 1),
+      // We geven enkel contributies met een total_amount > 0 een
+      // factuurnummer. In Winbooks.php worden alleen contributies met
+      // factuurnummer geëxporteerd. Op die manier vermijden we een
+      // export van nulfacturen (#4464)
+      'total_amount' => array('>' => 0),
+      'return' => 'id,financial_type_id',
+      // Voor de zekerheid sorteren we op contributie-ID.
+      // Op die manier probeer ik de aansluitingscontributies, die
+      // gemaakt zijn op volgorde van stamnummer, op dezelfde manier
+      // doorgeboekt te krijgen naar Winbooks. (#4407)
+      // FIXME: Als de facturen op termijn automatisch worden gegenereerd bij
+      // het aansluiten van leden, dan gaat die volgorde niet meer kloppen.
+      // We moeten ervoor blijven zorgen dat ledenlijst, attesten en facturen
+      // in dezelfde volgorde worden afgedrukt.
+      'options' => array('limit' => 0, 'sort' => 'id'),
+    ));
+
+    foreach ($result['values'] as $contribution) {
+      // Factuurnummer en OGM aanpassen van contributions waarbij dit nog
+      // niet gebeurd is.
+
+      $params = array(
+        'id' => $contribution['id'],
+        // Pas meteen ook receive_date aan (#4479).
+        'receive_date' => date("Y-m-d"),
+      );
+
+      if ($contribution['financial_type_id'] == CHIRO_FINANCIAL_TYPE_KOSTEN_EVENT ||
           // issue #4546
-          $financial_type_id == CHIRO_FINANCIAL_TYPE_70100000) {
-        $max_cursusfactuur_nr++;
-        $ogm = CRM_Financial_BAO_ExportFormat_Winbooks::ogm('CURSUS', $max_cursusfactuur_nr);
-        civicrm_api3('Contribution', 'create', array(
-          'id' => $contribution_id,
-          // Pruts met factuurdatum #4479
-          'receive_date' =>  date("Y-m-d"),
-          // Ik ben er zelf niet zeker van of trxn_id wel goed is voor
-          // factuurnummer. Maar ik blijf eraf, in de hoop dat het zo
-          // werkt.
-          'trxn_id' => $max_cursusfactuur_nr,
-          CHIRO_FIELD_CONTRIBUTION_OGM => $ogm,
-        ));
+          $contribution['financial_type_id'] == CHIRO_FINANCIAL_TYPE_70100000) {
+
+        $params['trxn_id'] = ++$cursusfactuur_nr;
+        $params['CHIRO_FIELD_CONTRIBUTION_OGM'] = self::ogm('CURSUS', $cursusfactuur_nr);
       }
-      if ($financial_type_id == CHIRO_FINANCIAL_TYPE_LIDGELD) {
-        $max_aansluitingsfactuur_nr++;
-        $ogm = CRM_Financial_BAO_ExportFormat_Winbooks::ogm('AANSLUIT', $max_aansluitingsfactuur_nr);
-        // Voor aansluitingsfacturen stellen we ook het source veld in
-        // Dat wordt in de winbooks export gebruikt voor het dagboek in
-        // te vullen.
-        civicrm_api3('Contribution', 'create', array(
-          'id' => $contribution_id,
-          // Pruts met factuurdatum #4479
-          'receive_date' =>  date("Y-m-d"),
-          'trxn_id' => $max_aansluitingsfactuur_nr,
-          // 'source' => 'AANSLUIT' is al gezet bij maken aansluitingsfacturen.
-          // We veranderen dat hier niet meer, voor wanneer we ooit de
-          // vrienden van de Chiro gaan factureren, of misschien
-          // opnieuw betalende Dubbelpuntabonnementen invoeren.
-          CHIRO_FIELD_CONTRIBUTION_OGM => $ogm,
-        ));
+      if ($contribution['financial_type_id'] == CHIRO_FINANCIAL_TYPE_LIDGELD) {
+        $params['trxn_id'] = ++$aansluitingsfactuur_nr;
+        $params['CHIRO_FIELD_CONTRIBUTION_OGM'] = self::ogm('AANSLUIT', $aansluitingsfactuur_nr);
+      }
+      $result = civicrm_api3('Contribution', 'create', $params);
+      if ($result['is_error']) {
+        // This will crash if e.g. the trxn_id already existed.
+        throw new Exception($result['error_message']);
       }
     }
-    CRM_Core_BAO_Setting::setItem($max_aansluitingsfactuur_nr, 'chirocontribution', 'chirocontribution_max_aansluitingsfactuur_nr');
-    CRM_Core_BAO_Setting::setItem($max_cursusfactuur_nr, 'chirocontribution', 'chirocontribution_max_cursusfactuur_nr');
+    CRM_Core_BAO_Setting::setItem($cursusfactuur_nr, 'chirocontribution', 'chirocontribution_max_cursusfactuur_nr');
+    CRM_Core_BAO_Setting::setItem($aansluitingsfactuur_nr, 'chirocontribution', 'chirocontribution_max_aansluitingsfactuur_nr');
   }
 }

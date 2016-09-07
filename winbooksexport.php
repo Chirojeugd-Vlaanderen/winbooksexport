@@ -152,6 +152,12 @@ function winbooksexport_civicrm_preProcess($formName, &$form) {
   }
 }
 
+/**
+ * Implements hook_civicrm_buildForm
+ *
+ * @param string $formName
+ * @param object $form
+ */
 function winbooksexport_civicrm_buildForm($formName, &$form) {
   if ($formName == "CRM_Financial_Form_Export") {
     // TODO: can't we just add Winbooks to the existing element?
@@ -176,7 +182,10 @@ function winbooksexport_civicrm_buildForm($formName, &$form) {
 function winbooksexport_civicrm_alterAPIPermissions($entity, $action, &$params, &$permissions) {
   $permissions['batched_contribution']['get'] = array(
     'access CiviCRM',
+    'view all manual batches',
     'access CiviContribute');
+}
+
 /**
  * Implements hook_civicrm_navigationMenu().
  *
