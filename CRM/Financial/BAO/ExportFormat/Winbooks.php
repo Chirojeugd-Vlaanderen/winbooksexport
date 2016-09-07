@@ -583,7 +583,7 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
     $result = civicrm_api3('BatchedContribution', 'get', array(
       'batch_id' => $batchId,
       // FIXME: we should have something like 'IS NULL OR EMPTY'.
-      'trxn_id' => array('IS_NULL' => 1),
+      'trxn_id' => array('IS NULL' => 1),
       // We geven enkel contributies met een total_amount > 0 een
       // factuurnummer. In Winbooks.php worden alleen contributies met
       // factuurnummer geëxporteerd. Op die manier vermijden we een
