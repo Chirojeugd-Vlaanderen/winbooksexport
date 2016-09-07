@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<menu>
+  <item>
+    <path>civicrm/financial/clearbatchtrxnids</path>
+    <page_callback>CRM_Winbooksexport_Form_ClearBatchTrxnIds</page_callback>
+    <title>Clear transaction IDs (batch)</title>
+    <access_arguments>edit contributions</access_arguments>
+  </item>
+</menu>

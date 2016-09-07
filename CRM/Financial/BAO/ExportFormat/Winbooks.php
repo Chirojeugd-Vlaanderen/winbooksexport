@@ -589,7 +589,7 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
       // factuurnummer geëxporteerd. Op die manier vermijden we een
       // export van nulfacturen (#4464)
       'total_amount' => array('>' => 0),
-      'return' => 'id,financial_type_id',
+      'return' => 'id,financial_type_id,trxn_id',
       // Voor de zekerheid sorteren we op contributie-ID.
       // Op die manier probeer ik de aansluitingscontributies, die
       // gemaakt zijn op volgorde van stamnummer, op dezelfde manier

@@ -190,13 +190,13 @@ function winbooksexport_civicrm_alterAPIPermissions($entity, $action, &$params, 
  * Implements hook_civicrm_navigationMenu().
  *
  * @link http://wiki.civicrm.org/confluence/display/CRMDOC/hook_civicrm_navigationMenu
- *
+ */
 function winbooksexport_civicrm_navigationMenu(&$menu) {
-  _winbooksexport_civix_insert_navigation_menu($menu, NULL, array(
-    'label' => ts('The Page', array('domain' => 'be.chiro.civi.winbooksexport')),
-    'name' => 'the_page',
-    'url' => 'civicrm/the-page',
-    'permission' => 'access CiviReport,access CiviContribute',
+  _winbooksexport_civix_insert_navigation_menu($menu, 'Contributions/Accounting Batches', array(
+    'label' => ts('Clear transaction IDs', array('domain' => 'be.chiro.civi.winbooksexport')),
+    'name' => 'clearbatchtrxnids',
+    'url' => 'civicrm/financial/clearbatchtrxnids',
+    'permission' => 'edit contributions',
     'operator' => 'OR',
     'separator' => 0,
   ));
