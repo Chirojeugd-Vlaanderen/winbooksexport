@@ -9,13 +9,17 @@ earlier versions of CiviCRM, you need to apply
 [a patch](https://issues.civicrm.org/jira/browse/CRM-18697) to fix
 [CRM-18697](https://issues.civicrm.org/jira/browse/CRM-18697).
 
-be.chiro.civi.winbooksexport depends on
-[be.chiro.civi.queryapitools](https://github.com/Chirojeugd-Vlaanderen/queryapitools),
-so you need to install that one as well.
-
-**Disclaimer:** This extension is crappy as well. :-) It is not production ready. It is probably broken, but it works for us at the moment. More or less. ;-)
+**Disclaimer:** This is a crappy extension. :-) It is not production ready.
+It is probably broken, but it works for us at the moment. More or less. ;-)
 You'll probably have to adapt it for your own organisation, or even better:
 make it configurable. (I will happily accept pull requests.)
+
+## Dependencies
+
+You need to install two other extensions for winbookseport to work:
+
+* [be.chiro.civi.queryapitools](https://github.com/Chirojeugd-Vlaanderen/queryapitools),
+* [be.chiro.civi.contributionbatchhelper](https://github.com/Chirojeugd-Vlaanderen/contributionbatchhelper),
 
 ## Configuration
 
