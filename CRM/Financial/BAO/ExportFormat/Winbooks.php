@@ -356,7 +356,11 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
           'amounteur' => $this->format($dao_act->amounteur,'amount'),
           'lineamounteur' => $this->format($dao_act->lineamounteur,'amount'),
           // Gestructureerde mededeling
-          'ogm' => $this->ogm($dao_act->dbkcode, $dao_act->docnumber),
+          // We maken die hier opnieuw, omdat die bij ons in een custom
+          // field zit, en we dat custom field hier niet kunnen opvragen.
+          // Voordeel is dan wel dat we hier de speciale tekens kunnen weglaten,
+          // zodat Winbooks het ding meteen herkent als OGM (#5443).
+          'ogm' => self::ogm($dao_act->dbkcode, $dao_act->docnumber, FALSE),
         );
       }
       $dao_ant = $dao_array['ant'];
@@ -498,12 +502,13 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
   }
 
   /**
-   * @param $bron_boekhouding
-   * @param $factuurnummer
+   * @param string $bron_boekhouding
+   * @param int $factuurnummer
+   * @param bool $human_readable
    *
    * @return string
    */
-  static function ogm($bron_boekhouding, $factuurnummer) {
+  static function ogm($bron_boekhouding, $factuurnummer, $human_readable = TRUE) {
     if (!isset($factuurnummer) || trim($factuurnummer)==='') {
       throw new Exception('Leeg factuurnummer, dat zou niet mogen.');
     }
@@ -526,9 +531,14 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
     }
     $factuurnummerdeel1 = substr($factuurnummer, 0, -3);
     $factuurnummerdeel2 = substr($factuurnummer, -3);
-    return '+++' . $laatste_cijfer_jaar . $ogm_code . '/'
-        . $factuurnummerdeel1 . '/' .
-         $factuurnummerdeel2 . $controlegetal . '+++';
+    if ($human_readable):
+      return '+++' . $laatste_cijfer_jaar . $ogm_code . '/'
+          . $factuurnummerdeel1 . '/' .
+           $factuurnummerdeel2 . $controlegetal . '+++';
+    else:
+      return $laatste_cijfer_jaar . $ogm_code
+          . $factuurnummerdeel1 . $factuurnummerdeel2 . $controlegetal;
+    endif;
   }
 
   /**
