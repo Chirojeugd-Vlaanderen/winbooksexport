@@ -164,17 +164,9 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
       UPPER(contact_from.external_identifier) as referentie,
       contact_from.organization_name as naam1,
       "
-      // HACK ALERT! : onderstaande constructie is een lelijke hack
-      // om het AD-nummer uit de extra adreslijn weg te halen. We gebruiken
-      // hier de kennis dat dat er staat, en wel tussen haakjes na een spatie.
-      // Dit gaat ooit helemaal verkeerde resultaten opleveren als die 2de
-      // adreslijn verandert, of als er een persoon is met een 'haakje open' in
-      // zijn naam. Maar voorlopig kan dit ermee door als fix voor #4411.
-      // Van zodra we in winbooks geen groepen meer hebben zonder financieel
-      // verantwoordelijke, kunnen we dit beter aanpassen zodanig dat er
-      // enkel records worden gegenereerd voor groepen die daadwerkelijk
-      // een financieel verantwoordelijke hebben.
-      ."LEFT(supplemental_address_1, LOCATE('(', supplemental_address_1) - 2) as naam2,
+      // HACK ALERT! : de naam van de financieel verantwoordelijke zit bij ons
+      // in supplemental_address_1.
+      ."supplemental_address_1 as naam2,
       cba.street_address as adres1,
       contact_fin_verantw_tel.phone as tel,
       extra_groep_informatie.$contact_ploeg_customfields_rekeningnummer_kolom as bankrekening,
@@ -228,7 +220,7 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
       cont.source as dbkcode,
       cont.trxn_id as docnumber,
       cfa.accounting_code as accountgl,
-      UPPER(contact.external_identifier) as accountrp,
+      contact.external_identifier as accountrp,
       cont.receive_date as date,
       ft.total_amount as amounteur,
       li.line_total as lineamounteur,
@@ -333,7 +325,7 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
         $csf[$dao_csf->referentie] = array(
           'referentie' => $this->format($dao_csf->referentie, 'referentie'),
           'naam1' => $dao_csf->naam1,
-          'naam2' => $dao_csf->naam2,
+          'naam2' => $this->format($dao_csf->naam2, 'display_name'),
           'adres1' => $dao_csf->adres1,
           'tel' => $dao_csf->tel,
           'bankrekening' => $dao_csf->bankrekening,
@@ -444,42 +436,54 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
     switch ($type) {
       case 'referentie':
       case 'accountrp':
-        // ADnr
+        // Convert external identifier to the format that's used in
+        // Winbooks. Sadly enough, it is not the same format for our
+        // organization.
+
+        // identifier of individual (AD-number)
         if (is_numeric($s)) {
-          $sout = 'AD' . $s;
+          // prefix with 'AD'.
+          $result = 'AD' . $s;
         }
-        // stamnummer remove spaces and slash
+        // identifier of ploegen (subcontacttype of organization)
         else {
-          $sout = str_replace(array(" ", "/"), "", $s);
+          // remove spaces and slashes
+          $result = strtoupper(str_replace(array(" ", "/"), "", $s));
         }
+        break;
+      case 'display_name':
+        // HACK. We use this to mess with a supplemental_address_1, containing
+        // a number between parentheses, that should not be sent to Winbooks.
+        // So let's remove it.
+        $result = trim(preg_replace('/\([0-9]+\)$/', '', $s));
         break;
       case 'postcode':
         //Blijkbaar doen we niet aan buitenlandse facturen
-        $sout = 'BE-' . $s;
+        $result = 'BE-' . $s;
         break;
       case 'dbkcode':
         if ($s == 'AANSLUIT' || $s == 'U_VERZEK') {
-          $sout = (string) "005";
+          $result = (string) "005";
         }
         else if ($s == 'DP') {
-          $sout = (string) "006";
+          $result = (string) "006";
         }
         else {
-          $sout = (string) "007";
+          $result = (string) "007";
         }
         break;
       case 'date':
-        $sout = date('Ymd', strtotime($s));
+        $result = date('Ymd', strtotime($s));
         break;
       case 'duedate':
-        $sout = date('Ymd', strtotime('+3 week', strtotime($s)));
+        $result = date('Ymd', strtotime('+3 week', strtotime($s)));
         break;
       case 'comment':
         if ($s == 'AANSLUIT' || $s == 'U_VERZEK') {
-          $sout = (string) "Aansluitingsfactuur";
+          $result = (string) "Aansluitingsfactuur";
         }
         else if ($s == 'DP') {
-          $sout = (string) "Dubbelpuntfactuur";
+          $result = (string) "Dubbelpuntfactuur";
         }
         else {
           // Hier gaat het vermoedelijk om een evenement. We vermelden niets,
@@ -487,18 +491,18 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
           // geplakt.
           // Separation of concerns m'n gat :-P
           // (nee, TODO: dit moet eigenlijk beter.)
-          $sout = (string) "";
+          $result = (string) "";
         }
         break;
       case 'amount':
         // Punt als decimaal scheidingsteken, zie ook #4251
-        $sout = number_format($s, 2, '.', '');
+        $result = number_format($s, 2, '.', '');
         break;
       case 'string':
         break;
     }
 
-    return $sout;
+    return $result;
   }
 
   /**
