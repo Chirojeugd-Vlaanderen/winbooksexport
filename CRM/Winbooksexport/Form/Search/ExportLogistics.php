@@ -50,6 +50,14 @@ class CRM_Winbooksexport_Form_Search_ExportLogistics extends CRM_Contact_Form_Se
   }
 
   /**
+   * @return array|null
+   */
+  public function setDefaultValues() {
+    $defaults['contact_type'] = 'Organization';
+    return $defaults;
+  }
+
+  /**
    * Get a list of summary data points
    *
    * @return mixed; NULL or array with keys:
