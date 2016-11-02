@@ -110,7 +110,8 @@ class CRM_Winbooksexport_Form_Search_ExportLogistics extends CRM_Contact_Form_Se
    */
   function all($offset = 0, $rowcount = 0, $sort = NULL, $includeContactIDs = FALSE, $justIDs = FALSE) {
     // delegate to $this->sql(), $this->select(), $this->from(), $this->where(), etc.
-    return $this->sql($this->select(), $offset, $rowcount, $sort, $includeContactIDs, NULL);
+    $sql = $this->sql($this->select(), $offset, $rowcount, $sort, $includeContactIDs, NULL);
+    return $sql;
   }
 
   /**
@@ -154,7 +155,7 @@ class CRM_Winbooksexport_Form_Search_ExportLogistics extends CRM_Contact_Form_Se
       LEFT OUTER JOIN (
         SELECT r.contact_id_b, e.email, p.phone
         FROM civicrm_relationship r
-        JOIN ccciv.civicrm_value_extra_lid_informatie_4 li ON r.id = li.entity_id
+        JOIN civicrm_value_extra_lid_informatie_4 li ON r.id = li.entity_id
         LEFT OUTER JOIN civicrm_phone p ON r.contact_id_a = p.contact_id AND p.is_primary
         LEFT OUTER JOIN civicrm_email e ON r.contact_id_a = e.contact_id AND e.is_primary
         WHERE r.relationship_type_id = " . CHIRO_RELATIONSHIP_LID_VAN . " 

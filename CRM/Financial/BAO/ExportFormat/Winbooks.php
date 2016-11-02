@@ -352,7 +352,7 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
           // field zit, en we dat custom field hier niet kunnen opvragen.
           // Voordeel is dan wel dat we hier de speciale tekens kunnen weglaten,
           // zodat Winbooks het ding meteen herkent als OGM (#5443).
-          'ogm' => self::ogm($dao_act->dbkcode, $dao_act->docnumber, FALSE),
+          'ogm' => CRM_Winbooksexport_Helper::ogm($dao_act->dbkcode, $dao_act->docnumber, FALSE),
         );
       }
       $dao_ant = $dao_array['ant'];
@@ -506,46 +506,6 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
   }
 
   /**
-   * @param string $bron_boekhouding
-   * @param int $factuurnummer
-   * @param bool $human_readable
-   *
-   * @return string
-   */
-  static function ogm($bron_boekhouding, $factuurnummer, $human_readable = TRUE) {
-    if (!isset($factuurnummer) || trim($factuurnummer)==='') {
-      throw new Exception('Leeg factuurnummer, dat zou niet mogen.');
-    }
-    $laatste_cijfer_jaar = ($factuurnummer / 100000) % 10;
-    if ($bron_boekhouding == 'AANSLUIT' || $bron_boekhouding == 'U_VERZEK') {
-      $ogm_code = 43;
-    }
-    else if ($bron_boekhouding == 'DP') {
-      $ogm_code = 45;
-    }
-    else {
-      $ogm_code = 47;
-    }
-    $controlegetal = (int)(($laatste_cijfer_jaar . $ogm_code . $factuurnummer) % 97);
-    if($controlegetal == 0){
-      $controlegetal = 97;
-    }
-    if($controlegetal < 10){
-      $controlegetal = '0' . $controlegetal;
-    }
-    $factuurnummerdeel1 = substr($factuurnummer, 0, -3);
-    $factuurnummerdeel2 = substr($factuurnummer, -3);
-    if ($human_readable):
-      return '+++' . $laatste_cijfer_jaar . $ogm_code . '/'
-          . $factuurnummerdeel1 . '/' .
-           $factuurnummerdeel2 . $controlegetal . '+++';
-    else:
-      return $laatste_cijfer_jaar . $ogm_code
-          . $factuurnummerdeel1 . $factuurnummerdeel2 . $controlegetal;
-    endif;
-  }
-
-  /**
    * Test whether the batch with given ID contains invoices with a trxn_id.
    *
    * @param int $batchId
@@ -630,11 +590,11 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
           $contribution['financial_type_id'] == CHIRO_FINANCIAL_TYPE_70100000) {
 
         $params['trxn_id'] = ++$cursusfactuur_nr;
-        $params['CHIRO_FIELD_CONTRIBUTION_OGM'] = self::ogm('CURSUS', $cursusfactuur_nr);
+        $params[CHIRO_FIELD_CONTRIBUTION_OGM] = CRM_Winbooksexport_Helper::ogm('CURSUS', $cursusfactuur_nr);
       }
       if ($contribution['financial_type_id'] == CHIRO_FINANCIAL_TYPE_LIDGELD) {
         $params['trxn_id'] = ++$aansluitingsfactuur_nr;
-        $params['CHIRO_FIELD_CONTRIBUTION_OGM'] = self::ogm('AANSLUIT', $aansluitingsfactuur_nr);
+        $params[CHIRO_FIELD_CONTRIBUTION_OGM] = CRM_Winbooksexport_Helper::ogm('AANSLUIT', $aansluitingsfactuur_nr);
       }
       $result = civicrm_api3('Contribution', 'create', $params);
       if ($result['is_error']) {
