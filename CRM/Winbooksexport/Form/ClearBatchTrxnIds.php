@@ -122,7 +122,8 @@ class CRM_Winbooksexport_Form_ClearBatchTrxnIds extends CRM_Core_Form {
       'options' => array('limit' => 0),
       'api.Contribution.create' => array(
         'id' => '$value.id',
-        'trxn_id' => NULL,
+        // if I do 'trxn_id' => NULL, it does not seem to work.
+        'trxn_id' => '',
       ),
     ));
 

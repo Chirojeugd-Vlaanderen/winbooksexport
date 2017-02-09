@@ -125,14 +125,6 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
     CRM_Core_BAO_CustomGroup::retrieve( $params, $results);
     $relationship_lid_van_customfields_tabel = $results['table_name'];
 
-    $params = array('name'=>'contact_ploeg_customfields');
-    CRM_Core_BAO_CustomGroup::retrieve( $params, $results);
-    $contact_ploeg_customfields_tabel = $results['table_name'];
-
-    $params = array('name'=>'contact_ploeg_customfields_rekeningnummer');
-    CRM_Core_BAO_CustomField::retrieve( $params, $results);
-    $contact_ploeg_customfields_rekeningnummer_kolom = $results['column_name'];
-
     $params = array('name'=>'relationship_lid_van_customfields_functie');
     CRM_Core_BAO_CustomField::retrieve( $params, $results);
     $relationship_lid_van_customfields_functie_kolom = $results['column_name'];
@@ -169,7 +161,7 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
       ."supplemental_address_1 as naam2,
       cba.street_address as adres1,
       contact_fin_verantw_tel.phone as tel,
-      extra_groep_informatie.$contact_ploeg_customfields_rekeningnummer_kolom as bankrekening,
+      '' as bankrekening,
       cba.city as woonplaats,
       cba.postal_code as postcode,
       contact_fin_verantw_email.email as email,
@@ -187,7 +179,6 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
       LEFT JOIN civicrm_contact contact_fin_verantw ON contact_fin_verantw.id = contact_relation.contact_id_a and extra_lid_informatie.$relationship_lid_van_customfields_functie_kolom like '%FI%'
       LEFT JOIN civicrm_address cba ON cba.contact_id = contact_from.id and cba.is_billing = 1
       LEFT JOIN civicrm_phone contact_fin_verantw_tel ON contact_fin_verantw_tel.contact_id = contact_fin_verantw.id and contact_fin_verantw_tel.is_primary = 1
-      LEFT JOIN $contact_ploeg_customfields_tabel extra_groep_informatie on contact_from.id = extra_groep_informatie.entity_id
       LEFT JOIN civicrm_email contact_fin_verantw_email ON contact_fin_verantw_email.contact_id = contact_fin_verantw.id and contact_fin_verantw_email.is_primary = 1
       WHERE eb.batch_id = ( %1 ) and contact_from.contact_type = 'Organization'";
 
