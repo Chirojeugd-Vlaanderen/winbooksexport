@@ -24,4 +24,4 @@
  +--------------------------------------------------------------------+
  
  Alles op 1 lijn, om overbodige whitespace in export te verrmijden (#4251)
-*}{foreach from=$ant key=ant_id item=ant_factuur}{foreach from=$ant_factuur key=ant_id item=ant_item}"{$ant_item.dbkcode}","2","{$ant_item.docnumber}","","","{$ant_item.accountgl}","{$ant_item.date}","{$ant_item.comment}","","-{$ant_item.amountgl}","","","","","","","","","FALSE","1","-{$ant_item.amountgl}","{$ant_item.zonana1}","","{"%03d"|sprintf:$ant_id+2}","","","","DC"{"\r\n"}{/foreach}{/foreach}
+*}{foreach from=$ant key=ant_id item=ant_factuur}{foreach from=$ant_factuur key=ant_id item=ant_item}"{$ant_item.dbkcode}","2","{$ant_item.docnumber}","","","{$ant_item.accountgl}","{$ant_item.date}","{$ant_item.comment}","","{$ant_item.amountgl}","","","","","","","","","FALSE","1","{$ant_item.amountgl}","{$ant_item.zonana1}","","{"%03d"|sprintf:$ant_id+2}","","","","DC"{"\r\n"}{/foreach}{/foreach}

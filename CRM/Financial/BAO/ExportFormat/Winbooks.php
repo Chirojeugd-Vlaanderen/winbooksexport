@@ -337,7 +337,7 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
           'duedate' => $this->format($dao_act->date, 'duedate'),
           'comment' => trim($this->format($dao_act->dbkcode, 'comment') . ' ' . $dao_act->comment),
           'amounteur' => $this->format($dao_act->amounteur,'amount'),
-          'lineamounteur' => $this->format($dao_act->lineamounteur,'amount'),
+          'lineamounteur' => $this->format($dao_act->lineamounteur,'lineamounteur'),
           // Gestructureerde mededeling
           // We maken die hier opnieuw, omdat die bij ons in een custom
           // field zit, en we dat custom field hier niet kunnen opvragen.
@@ -353,7 +353,7 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
           'docnumber' => $dao_ant->docnumber,
           'accountgl' => $dao_ant->accountgl,
           'date' => $this->format($dao_ant->date, 'date'),
-          'amountgl' => $this->format($dao_ant->amountgl,'amount'),
+          'amountgl' => $this->format($dao_ant->amountgl,'lineamounteur'),
           'zonana1' => $dao_ant->zonana1,
           'comment' => trim($this->format($dao_ant->dbkcode, 'comment') . ' ' . $dao_ant->comment),
         );
@@ -424,6 +424,9 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
    * @return bool|mixed|string
    */
   static function format($s, $type = 'string') {
+    $decimals = 2;
+    $dec_point = '.';
+    $thousands_separator = '';
     switch ($type) {
       case 'referentie':
       case 'accountrp':
@@ -487,7 +490,11 @@ class CRM_Financial_BAO_ExportFormat_Winbooks extends CRM_Financial_BAO_ExportFo
         break;
       case 'amount':
         // Punt als decimaal scheidingsteken, zie ook #4251
-        $result = number_format($s, 2, '.', '');
+        $result = number_format($s, $decimals, $dec_point, $thousands_separator);
+        break;
+      case 'lineamounteur':
+        $value = -1 * $s;
+        $result = number_format($value, $decimals, $dec_point, $thousands_separator);
         break;
       case 'string':
         break;
